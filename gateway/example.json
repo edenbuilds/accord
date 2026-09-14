@@ -1,0 +1,14 @@
+{
+  "version": "accord.gateway/v1",
+  "upstreams": [
+    { "namespace": "preview", "url": "https://mcp.edenbuilds.me/mcp" }
+  ],
+  "policy": {
+    "version": "accord.policy/v1",
+    "name": "Read-only preview",
+    "allowedTools": ["preview.accord_describe", "preview.accord_evaluate"],
+    "requireApproval": [],
+    "limitPerMinute": 30,
+    "maxPayloadBytes": 32768
+  }
+}

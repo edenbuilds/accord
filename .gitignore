@@ -1,0 +1,8 @@
+node_modules/
+.next/
+.vercel/
+.env*
+!.env.example
+landing-reveal/
+*.tsbuildinfo
+qa/
