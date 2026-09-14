@@ -178,6 +178,8 @@
   /* Live demo and gateway */
   .live { display: grid; gap: 36px; grid-template-columns: minmax(0, 1fr); }
   @media (min-width: 980px) { .live { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); align-items: start; } }
+  /* The shared title size left "agent." alone on a line in the 0.85fr column (15-09-2026). */
+  .live .title { font-size: clamp(2.2rem, 3.6vw, 3.4rem); text-wrap: balance; }
   .live-steps { list-style: none; padding: 0; margin: 30px 0 0; display: grid; gap: 16px; counter-reset: step; }
   .live-steps li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; }
   .live-steps li::before { counter-increment: step; content: counter(step); width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--lilac); color: #221a3a; font-weight: 600; font-size: 14px; }
