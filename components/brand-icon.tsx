@@ -61,7 +61,7 @@ function pick(icon: Icon, mono: boolean): { svg: string; flat: boolean; tint?: s
   if (w / h > 1.6 && variants.mono) return { svg: variants.mono, flat: true, tint: `#${icon.hex}` };
   const fills = [...new Set([...icon.svg.matchAll(/fill="#([0-9a-fA-F]{3,6})"/g)].map((m) => m[1].toLowerCase()))];
   const lum = fills.length === 1 ? luminance(fills[0]) : 0.5;
-  if (fills.length === 0 || lum < 0.08 || lum > 0.95) {
+  if (fills.length === 0 || lum < 0.2 || lum > 0.95) {
     return { svg: icon.svg.replace(/fill="#[0-9a-fA-F]{3,6}"/g, 'fill="currentColor"'), flat: true };
   }
   return { svg: icon.svg, flat: false };

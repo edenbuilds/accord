@@ -36,7 +36,7 @@ export default function LiveDemo({ initial = useCases[0].slug }: { initial?: str
     return (
       <div className="live-card">
         <div className="lg-feed-head">
-          <strong>Your {uc.label.toLowerCase()} sandbox is live</strong>
+          <strong>{uc.label} sandbox is live</strong>
           <button type="button" className="link" onClick={() => setState({ status: "idle" })}>
             Start over
           </button>
