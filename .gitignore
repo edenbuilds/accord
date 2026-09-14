@@ -6,3 +6,5 @@ node_modules/
 landing-reveal/
 *.tsbuildinfo
 qa/
+.vercel
+.originkit/

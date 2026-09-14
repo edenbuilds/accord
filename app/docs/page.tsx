@@ -1,280 +1,205 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { Header, Footer, CopyButton } from "@/components/ui";
-export const metadata = { title: "Documentation" };
-const command =
-  "claude mcp add --transport http accord https://mcp.edenbuilds.me/mcp";
-export default function Docs() {
+import { Header, Footer } from "@/components/ui";
+import { VERCEL_DEPLOY } from "@/components/landing";
+
+export const metadata: Metadata = {
+  title: "Documentation",
+  description:
+    "Quickstart, input formats, policies, security and the API for Accord, the MCP gateway that checks every agent tool call.",
+  alternates: { canonical: "/docs" },
+};
+
+const policyExample = `{
+  "version": "accord.gateway-policy/v1",
+  "roles": {
+    "agent":  { "allow": ["*"], "deny": ["*/production/*"], "readOnly": false },
+    "viewer": { "allow": ["*"], "deny": [], "readOnly": true }
+  },
+  "defaultRole": "agent",
+  "requireApproval": ["delete_*", "create_refund"],
+  "loop": { "maxRepeats": 5, "windowSeconds": 60 },
+  "rate": { "capacity": 20, "refillPerMinute": 60 },
+  "callLimit": 1000,
+  "cacheSeconds": 60,
+  "cache": ["run_sql"],
+  "strip": ["*_url", "url", "_links", "links", "etag", "node_id", "metadata"],
+  "redact": ["email", "phone", "address"],
+  "prune": {}
+}`;
+
+const nav = [
+  ["quickstart", "Quickstart"],
+  ["inputs", "What you can paste"],
+  ["flow", "How a call flows"],
+  ["policies", "Policies"],
+  ["security", "Security"],
+  ["receipts", "Receipts"],
+  ["api", "API"],
+  ["connect", "Public MCP endpoint"],
+];
+
+export default function DocsPage() {
   return (
     <>
       <Header />
-      <main id="main" className="wrap doc-layout">
-        <aside className="doc-nav">
-          <span>Developer documentation</span>
-          <a href="#quickstart">Public preview</a>
-          <a href="#policy">Policy contract</a>
-          <a href="#local">Local gateway</a>
-          <a href="#security">Security boundary</a>
-          <a href="#compatibility">Compatibility</a>
-          <Link href="/roadmap">What comes next</Link>
-        </aside>
-        <article className="doc-content">
-          <p className="eyebrow">Accord / Developer preview</p>
-          <h1>
-            A boundary you
-            <br />
-            can inspect.
-          </h1>
-          <p className="doc-lead">
-            Start with a real policy evaluation. Then run a gateway in your own
-            environment. Every capability below is explicit about where it
-            works.
-          </p>
-          <section id="quickstart">
-            <h2>Connect to the public preview</h2>
+      <main id="main">
+        <section className="page-hero">
+          <div className="shell">
+            <p className="kicker">Documentation</p>
+            <h1 className="title">
+              Everything you need
+              <br />
+              <span className="soft">to put Accord in front of your&nbsp;agent.</span>
+            </h1>
+            <p className="lede">{nav.map(([id, label], i) => (
+              <span key={id}>
+                <a className="link" href={`#${id}`}>{label}</a>
+                {i < nav.length - 1 ? " · " : ""}
+              </span>
+            ))}</p>
+          </div>
+        </section>
+        <section className="section">
+          <div className="shell prose">
+            <h2 id="quickstart">Quickstart</h2>
+            <h3>1. Get a sandbox URL</h3>
             <p>
-              The endpoint exposes two read-only tools. No API keys or connected
-              accounts are required. Claude Code supports this command:
+              On the <Link href="/#live">homepage</Link> or in the <Link href="/app">converter</Link>, click Create my sandbox
+              URL or Get a live MCP URL. No account is needed. Sandbox calls return sample data.
             </p>
-            <pre>{command}</pre>
-            <CopyButton text={command} />
+            <h3>2. Connect your agent</h3>
+            <pre className="code-line">{`# Claude Code
+claude mcp add --transport http accord https://mcp.edenbuilds.me/g/YOUR_ID/mcp
+
+# Cursor: .cursor/mcp.json
+{ "mcpServers": { "accord": { "url": "https://mcp.edenbuilds.me/g/YOUR_ID/mcp" } } }
+
+# VS Code: .vscode/mcp.json
+{ "servers": { "accord": { "type": "http", "url": "https://mcp.edenbuilds.me/g/YOUR_ID/mcp" } } }`}</pre>
+            <p>Add ?role=viewer to the URL to connect with read-only tools.</p>
+            <h3>3. Run it on your own server</h3>
             <p>
-              In another MCP client, add{" "}
-              <code>https://mcp.edenbuilds.me/mcp</code> as a remote HTTP
-              server. Use the client’s own configuration format.
-            </p>
-            <table>
-              <thead>
-                <tr>
-                  <th>Tool</th>
-                  <th>What it does</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <code>accord_describe</code>
-                  </td>
-                  <td>
-                    Returns the preview’s capability and deployment boundaries.
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <code>accord_evaluate</code>
-                  </td>
-                  <td>
-                    Evaluates a policy and caller-supplied request metadata. It
-                    never forwards a request to an external service.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <p style={{ marginTop: 20 }}>
-              Try: “Use Accord to evaluate whether an agent can call
-              github.list_issues after it has already made 30 calls this minute,
-              with a limit of 30.”
-            </p>
-          </section>
-          <section id="policy">
-            <h2>The first policy contract</h2>
-            <p>
-              A versioned JSON document is the source of truth. The workbench,
-              public MCP tool, and local gateway use the same deterministic
-              evaluator.
-            </p>
-            <pre>
-              {JSON.stringify(
-                {
-                  version: "accord.policy/v1",
-                  name: "Engineering agent",
-                  allowedTools: ["github.list_issues", "github.create_issue"],
-                  requireApproval: ["github.create_issue"],
-                  limitPerMinute: 30,
-                  maxPayloadBytes: 32768,
-                },
-                null,
-                2,
-              )}
-            </pre>
-            <ul>
-              <li>
-                Only exact tool names in <code>allowedTools</code> are
-                permitted. Names are case sensitive.
-              </li>
-              <li>
-                The minute limit and byte boundary are checked before the
-                approval rule.
-              </li>
-              <li>
-                An approval requirement returns <code>approval_required</code>.
-                The local gateway blocks it; no approval bypass is implemented.
-              </li>
-              <li>
-                Policy versions are explicit. Unknown properties are rejected
-                when parsing.
-              </li>
-            </ul>
-            <p>
-              The workbench’s call count is a simulation input. The local
-              gateway measures and reserves its own call count before it
-              contacts an upstream server.
-            </p>
-            <Link className="button secondary" href="/workbench">
-              Try the policy workbench
-            </Link>
-          </section>
-          <section id="local">
-            <h2>Run the local gateway</h2>
-            <p>
-              Requires Node.js 22 or later. The default config routes to the
-              public preview, so you can verify the path without granting access
-              to any private system.
-            </p>
-            <pre>{`git clone https://github.com/edenbuilds/accord.git
-cd accord
-npm ci
-export ACCORD_GATEWAY_TOKEN="$(openssl rand -hex 32)"
-npm run gateway`}</pre>
-            <p>
-              The gateway listens on <code>http://127.0.0.1:4318/mcp</code>.
-              Configure your MCP client to send{" "}
-              <code>Authorization: Bearer $ACCORD_GATEWAY_TOKEN</code>, using
-              the actual environment value through its secure secret
-              configuration. It will expose <code>preview.accord_describe</code>{" "}
-              and <code>preview.accord_evaluate</code>.
-            </p>
-            <h3>Bring a remote server</h3>
-            <p>
-              Copy <code>gateway/example.json</code>, set{" "}
-              <code>ACCORD_CONFIG</code> to the new path, and replace the
-              upstream configuration. Credentials are environment variable
-              references, never configuration values.
-            </p>
-            <pre>
-              {JSON.stringify(
-                {
-                  namespace: "github",
-                  url: "https://api.githubcopilot.com/mcp/",
-                  tokenEnv: "GITHUB_MCP_TOKEN",
-                },
-                null,
-                2,
-              )}
-            </pre>
-            <p>
-              Set the referenced credential in your shell or secret manager.
-              Discover the server’s actual tool names and explicitly allow{" "}
-              <code>namespace.tool_name</code>. Restart after configuration or
-              upstream schema changes. The preview supports up to two upstreams
-              and 100 allowed tools.
-            </p>
-            <h3>What runs before forwarding</h3>
-            <ul>
-              <li>
-                Gateway bearer authentication, loopback host and origin guards.
-              </li>
-              <li>
-                64 KB HTTP body cap, schema validation, explicit tool
-                visibility.
-              </li>
-              <li>
-                A shared process-local minute budget and 32 KB default argument
-                limit.
-              </li>
-              <li>
-                Approval-gated tools remain blocked. Three consecutive upstream
-                errors open a 30-second circuit.
-              </li>
-              <li>
-                Ten-second upstream timeouts and no automatic write retries.
-              </li>
-              <li>
-                Metadata receipts on stdout with policy/schema hashes and
-                outcome. Arguments, credentials, and response payloads are
-                omitted.
-              </li>
-            </ul>
-            <p>
-              The preview circuit is shared across upstreams. Quotas and
-              circuits reset on restart and cannot coordinate multiple replicas.
-              Upstream responses are not yet size-bounded; use trusted
-              evaluation servers. These limits are documented evaluation
-              constraints, not production safeguards.
-            </p>
-          </section>
-          <section id="security">
-            <h2>Security boundary</h2>
-            <p>
-              The hosted site has no tenant database, billing system, identity
-              broker, or production customer gateway. Its public MCP endpoint
-              performs read-only calculations. Do not send secrets or customer
-              records to it.
-            </p>
-            <p>
-              Workbench policies are stored in localStorage. Payload projection
-              happens in your browser. Decision receipts last only for the
-              current tab session and are unsigned. The public endpoint does not
-              intentionally persist submitted policy data, but Vercel processes
-              requests and can retain platform access metadata.
-            </p>
-            <p>
-              The local gateway uses a single shared bearer principal. That is
-              scoped gateway authentication, not OAuth delegation, JWT audience
-              validation, or per-agent RBAC. Incoming credentials are never
-              passed through to upstream services. Upstream bearer credentials
-              are configured separately.
-            </p>
-            <p>
-              Run it on loopback for evaluation. Production exposure requires
-              TLS, tenant isolation, durable quotas, upstream egress
-              restrictions, secret rotation, durable audit delivery, and
-              operational hardening.{" "}
-              <Link href="/roadmap">See the delivery sequence.</Link>
-            </p>
-            <h3>Disclosure</h3>
-            <p>
-              Report a vulnerability through{" "}
-              <a href="https://github.com/edenbuilds/accord/security">
-                GitHub security reporting
-              </a>
-              . Never include working credentials or private payloads in a
-              public issue.
-            </p>
-          </section>
-          <section id="compatibility">
-            <h2>Protocol and scope</h2>
-            <p>
-              The implementation uses the official MCP TypeScript SDK v2. The
-              HTTP handler supports modern requests and the SDK’s stateless
-              compatibility path for older clients. Transport session
-              persistence, subscriptions, resources, prompts, and remote stdio
-              process hosting are outside this preview.
-            </p>
-            <p>
-              The hosted MCP endpoint and local gateway have automated SDK
-              client tests. Compatibility with every client application is not
-              implied. In particular, client products that require OAuth for
-              remote connections may need the planned identity phase.
+              The template in <code>templates/mcp-server</code> calls your real API with your key. Every option needs your
+              gateway’s manifest URL, shown on its page, and a token your agent will send.
             </p>
             <ul>
               <li>
-                <a href="https://github.com/modelcontextprotocol/typescript-sdk">
-                  Official TypeScript SDK
+                <a href={VERCEL_DEPLOY} target="_blank" rel="noopener noreferrer">
+                  Deploy to Vercel
                 </a>
+                . Your URL is https://your-project.vercel.app/mcp.
               </li>
               <li>
-                <a href="https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization">
-                  MCP authorization and separate upstream tokens
-                </a>
+                Docker: <code>curl -sL https://mcp.edenbuilds.me/docker | bash -s -- YOUR_ID</code>
               </li>
               <li>
-                <a href="https://github.com/edenbuilds/accord">
-                  Source, tests, and full product strategy
-                </a>
+                Node: <code>npm install && node server.mjs</code> inside the template folder.
               </li>
             </ul>
-          </section>
-        </article>
+            <h3 id="railway">Railway</h3>
+            <ol>
+              <li>Fork github.com/edenbuilds/accord.</li>
+              <li>In Railway, create a project and choose Deploy from GitHub repo, then pick your fork.</li>
+              <li>In the service settings, set the root directory to templates/mcp-server.</li>
+              <li>Add ACCORD_MANIFEST_URL, API_TOKEN and MCP_BEARER_TOKEN as variables.</li>
+              <li>Generate a domain. Your URL is https://your-service.up.railway.app/mcp.</li>
+            </ol>
+            <p>The self-hosted template forwards calls. The seven checks run on the Accord gateway, not in the template.</p>
+
+            <h2 id="inputs">What you can paste</h2>
+            <ul>
+              <li>
+                <strong>cURL.</strong> One tool per command. Put <code># tool_name: What it does</code> on the line above a
+                command to name it. Keys in headers, -u and the URL are removed.
+              </li>
+              <li>
+                <strong>OpenAPI 3.0 and 3.1, Swagger 2.0.</strong> JSON or YAML. Local $ref links are resolved. Up to 200
+                operations and 1 MB.
+              </li>
+              <li>
+                <strong>Postman v2.1.</strong> Folders, collection variables and auth settings are read.
+              </li>
+            </ul>
+
+            <h2 id="flow">How a call flows</h2>
+            <p>Agent → Accord gateway → your API → Accord gateway → agent. In the sandbox, the API step returns sample data.</p>
+            <ol>
+              <li>Readable request: arguments must be a JSON object under 64 KB.</li>
+              <li>Tool allowed: the role must be allowed to see the tool.</li>
+              <li>Inputs match: arguments are checked against the tool’s schema.</li>
+              <li>Approval: matching tools are held for a person. Nothing is sent.</li>
+              <li>Loop breaker: the same call repeated too often is stopped.</li>
+              <li>Rate limit: a token bucket per gateway.</li>
+              <li>Quota: 1,000 calls per sandbox gateway.</li>
+            </ol>
+            <p>After the call: cache, strip bulky fields, prune to chosen fields, redact private fields, then write a receipt.</p>
+
+            <h2 id="policies">Policies</h2>
+            <p>
+              Each gateway has one policy. Built-in use cases come with their own. Patterns use * and match a tool’s name or
+              its path.
+            </p>
+            <pre className="code-line">{policyExample}</pre>
+
+            <h2 id="security">Security</h2>
+            <ul>
+              <li>
+                <strong>Safety checks fail closed.</strong> If the store behind roles, loops, rate limits or quotas is
+                unreachable, the call is stopped.
+              </li>
+              <li>
+                <strong>Optimisations fail open.</strong> If caching, stripping or receipts fail, the call still returns.
+              </li>
+              <li>
+                <strong>Redaction fails closed.</strong> If private fields cannot be removed, the response is withheld.
+              </li>
+              <li>
+                <strong>No secrets in tools.</strong> The converter removes keys. Self-hosted servers add them on the
+                server.
+              </li>
+              <li>
+                <strong>The sandbox never forwards.</strong> It cannot reach your systems or anyone else’s.
+              </li>
+              <li>
+                <strong>Roles in the sandbox are chosen by the URL.</strong> They show filtering, not verified identity.
+                Identity mapping is on the <Link href="/roadmap">roadmap</Link>.
+              </li>
+            </ul>
+            <p>Not yet available: SSO, OAuth identity mapping, Slack approval buttons, audit export, SOC 2, SLAs.</p>
+
+            <h2 id="receipts">Receipts</h2>
+            <p>
+              Every call writes a receipt: id, time, tool, role, decision and rule, a fingerprint of the arguments and the
+              policy, time taken, and sizes before and after trimming. Receipts never include response bodies. Sandbox
+              receipts are kept for 30 days.
+            </p>
+
+            <h2 id="api">API</h2>
+            <ul>
+              <li>
+                <code>POST /api/gateways</code> with <code>{`{ "input": "curl ..." }`}</code> creates a sandbox gateway.
+                Twenty per hour per network.
+              </li>
+              <li>
+                <code>GET /api/gateways/ID</code> returns tools, rules, call count and recent receipts.
+              </li>
+              <li>
+                <code>GET /api/gateways/ID?view=manifest</code> returns the tool manifest for self-hosting.
+              </li>
+              <li>
+                <code>POST /g/ID/mcp</code> is the MCP endpoint (Streamable HTTP, JSON responses).
+              </li>
+            </ul>
+
+            <h2 id="connect">Public MCP endpoint</h2>
+            <p>
+              https://mcp.edenbuilds.me/mcp exposes two read-only tools, accord_describe and accord_evaluate, so any MCP client
+              can evaluate a policy without creating a gateway. The <Link href="/workbench">policy workbench</Link> uses the
+              same evaluator.
+            </p>
+          </div>
+        </section>
       </main>
       <Footer />
     </>

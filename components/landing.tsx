@@ -1,588 +1,428 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
-import {
-  ArrowUpRight,
-  ArrowRight,
-  ShieldCheck,
-  Fingerprint,
-  Route,
-  Braces,
-  Check,
-  ChevronDown,
-  Plus,
-  Minus,
-  Terminal,
-  Play,
-  Pause,
-  LockKeyhole,
-  FileCheck2,
-} from "lucide-react";
-import { Header, Footer, Mark, CopyButton } from "./ui";
-import { Reveal } from "./reveal";
-const modes = [
+import { ArrowRight, ArrowUpRight, Check, Database, Eye, Hand, Repeat, Scissors, ShieldCheck, ShieldOff } from "lucide-react";
+import { Header, Footer, Mark } from "./ui";
+import Converter, { loadIntoConverter } from "./converter";
+import LiveDemo from "./live-demo";
+import { BrandIcon, brandTitle, type Brand } from "./brand-icon";
+import AsciiWaves from "./originkit/ui/hero-21/character-waves";
+import CharStaggerPrimaryButton from "./effects/char-stagger-primary-button";
+import NumberCounterOne from "./effects/number-counter/NumberCounterOne";
+import { FAQContent, FAQGroup, FAQTitle, FAQWrapper } from "./effects/animated-faq/AnimatedFaqComp";
+import { useCases } from "@/lib/use-cases";
+import { faqs } from "@/lib/content";
+
+const CLIENTS: Brand[] = ["claude", "cursor", "vscode", "openai", "windsurf"];
+export const VERCEL_DEPLOY =
+  "https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fedenbuilds%2Faccord%2Ftree%2Fmain%2Ftemplates%2Fmcp-server&project-name=accord-mcp-server&env=ACCORD_MANIFEST_URL,API_TOKEN,MCP_BEARER_TOKEN&envDescription=Your%20gateway%20manifest%20URL%2C%20your%20API%20key%2C%20and%20a%20token%20your%20agent%20will%20send.&envLink=https%3A%2F%2Fmcp.edenbuilds.me%2Fdocs%23quickstart";
+
+const guards = [
   {
-    label: "Route",
-    icon: Route,
-    title: "One endpoint. A deliberate path.",
-    text: "Bring remote MCP servers behind one address. Give each tool a namespace and each agent an explicit boundary.",
-    trace: "github.list_issues",
-    decision: "Allowed by engineering policy",
-    color: "allowed",
+    icon: Repeat,
+    title: "Stops runaway loops",
+    text: "If an agent sends the same call five times in a minute, Accord stops it before it runs up your bill.",
+    proof: "Try it: send the same message six times in the sandbox chat.",
   },
   {
-    label: "Govern",
-    icon: ShieldCheck,
-    title: "Permission before execution.",
-    text: "Check the tool, the request size, and the remaining call budget before any request reaches an upstream service.",
-    trace: "database.drop",
-    decision: "Denied · tool outside allowlist",
-    color: "denied",
+    icon: Eye,
+    title: "Each agent sees only its tools",
+    text: "Give a support agent read-only tools. Keep production tools out of its list entirely.",
+    proof: "Role-based tool lists, matched by tool name or path.",
   },
   {
-    label: "Observe",
-    icon: FileCheck2,
-    title: "Every decision has a reason.",
-    text: "Inspect a decision receipt with the policy, tool, and rule that produced it. Export it without handing over your payloads.",
-    trace: "github.create_issue",
-    decision: "Held · explicit approval required",
-    color: "held",
+    icon: Hand,
+    title: "A person approves the risky ones",
+    text: "Deletes, refunds and account changes are held. Nothing is sent to your API until someone approves.",
+    proof: "The hold works today. Slack approval buttons are on the roadmap.",
+  },
+  {
+    icon: Scissors,
+    title: "Smaller responses, fewer tokens",
+    text: "Links, metadata and fields you do not need are removed before the response reaches the model.",
+    proof: "Every receipt shows the real bytes saved on that call.",
+  },
+  {
+    icon: ShieldOff,
+    title: "Private fields never reach the model",
+    text: "Emails, phone numbers or any field you name are replaced first. If that step fails, the response is withheld.",
+    proof: "This check fails closed, by design.",
+  },
+  {
+    icon: Database,
+    title: "Repeat questions answered from cache",
+    text: "Identical read calls come back from the cache, so your API is not hit twice for the same answer.",
+    proof: "Exact-match cache, per gateway.",
   },
 ];
-function GatewayArt() {
-  const [paused, setPaused] = useState(false);
-  return (
-    <div
-      className={`gateway-art ${paused ? "paused" : ""}`}
-      aria-label="Gateway architecture illustration"
-    >
-      <div className="art-top">
-        <span>A boundary for every action.</span>
-        <button
-          onClick={() => setPaused(!paused)}
-          aria-label={
-            paused ? "Play gateway animation" : "Pause gateway animation"
-          }
-        >
-          {paused ? <Play size={15} /> : <Pause size={15} />}
-        </button>
-      </div>
-      <svg
-        className="architecture"
-        viewBox="0 0 640 510"
-        fill="none"
-        aria-hidden="true"
-      >
-        <defs>
-          <linearGradient
-            id="slab"
-            x1="170"
-            y1="100"
-            x2="490"
-            y2="340"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stopColor="#dbe5cd" />
-            <stop offset="1" stopColor="#819b69" />
-          </linearGradient>
-          <linearGradient id="floor">
-            <stop stopColor="#354039" stopOpacity="0" />
-            <stop offset=".5" stopColor="#819578" stopOpacity=".4" />
-            <stop offset="1" stopColor="#354039" stopOpacity="0" />
-          </linearGradient>
-          <filter id="shadow">
-            <feGaussianBlur stdDeviation="18" />
-          </filter>
-        </defs>
-        <path
-          d="M0 320 320 140 640 320M0 380 320 200 640 380M0 440 320 260 640 440M100 510 420 330M220 510 540 330M420 510 100 330M540 510 220 330"
-          stroke="url(#floor)"
-        />
-        <ellipse
-          cx="328"
-          cy="397"
-          rx="178"
-          ry="45"
-          fill="#050a06"
-          opacity=".7"
-          filter="url(#shadow)"
-        />
-        <g className="lower-layer">
-          <path
-            d="m141 299 178-101 183 103-177 103z"
-            fill="#25342c"
-            stroke="#718069"
-          />
-          <path
-            d="m141 299 184 105 177-103v17L325 422 141 316z"
-            fill="#17271d"
-            stroke="#4b6049"
-          />
-          <path
-            d="m192 300 128-73 130 74-127 74z"
-            fill="#1c2e23"
-            stroke="#4b6049"
-          />
-          <path
-            d="m259 303 63-36 63 36-63 36z"
-            fill="#d9efaa"
-            fillOpacity=".08"
-            stroke="#c9e498"
-          />
-        </g>
-        <g className="main-layer">
-          <path
-            d="m141 208 178-101 183 103-177 103z"
-            fill="url(#slab)"
-            stroke="#dfe8ce"
-          />
-          <path
-            d="m141 208 184 105 177-103v22L325 336 141 230z"
-            fill="#6d8259"
-            stroke="#92a779"
-          />
-          <path d="m325 313 177-103v22L325 336z" fill="#49653f" />
-          <path
-            d="m232 208 87-49 88 50-87 49z"
-            stroke="#40583a"
-            strokeWidth="1.5"
-          />
-          <path
-            d="m284 225 17-34 12-7-15 34m19-3 10-21 26 4m-53 12 39-22"
-            stroke="#273d23"
-            strokeWidth="5"
-          />
-          <path
-            d="m174 210 25 14m10 6 10 6m209-23 26-15"
-            stroke="#e4ebd8"
-            strokeWidth="3"
-          />
-        </g>
-        <g className="top-layer">
-          <path
-            d="m220 87 100-57 101 57-101 57z"
-            fill="#263c2e"
-            fillOpacity=".4"
-            stroke="#7f9872"
-          />
-          <path
-            d="m220 87 100 57 101-57v8l-101 57-100-57z"
-            fill="#314733"
-            stroke="#7f9872"
-          />
-          <path d="m298 87 22-13 23 13-23 13z" fill="#d0ec9f" />
-        </g>
-        <path
-          className="flow-line"
-          d="M320 30V0M320 154v45m0 137v46m182-172 93-53M141 208 44 153m98 147L40 355m462-53 99 55"
-          stroke="#bfdc9b"
-          strokeWidth="1.5"
-          strokeDasharray="4 7"
-        />
-        <text
-          x="36"
-          y="137"
-          fill="#c2ccb9"
-          fontSize="12"
-          fontFamily="sans-serif"
-        >
-          AGENTS
-        </text>
-        <text
-          x="517"
-          y="141"
-          fill="#c2ccb9"
-          fontSize="12"
-          fontFamily="sans-serif"
-        >
-          IDENTITY
-        </text>
-        <text
-          x="18"
-          y="378"
-          fill="#c2ccb9"
-          fontSize="12"
-          fontFamily="sans-serif"
-        >
-          POLICY
-        </text>
-        <text
-          x="541"
-          y="383"
-          fill="#c2ccb9"
-          fontSize="12"
-          fontFamily="sans-serif"
-        >
-          TOOLS
-        </text>
-      </svg>
-      <div className="art-bottom">
-        <span>
-          <ShieldCheck size={16} /> Explicit by design
-        </span>
-        <span>Architecture preview</span>
-      </div>
-    </div>
-  );
-}
+
+const plans = [
+  {
+    name: "Sandbox",
+    price: "$0",
+    note: "Available now",
+    now: true,
+    features: ["Converter and sandbox chat", "Live MCP gateway URL", "1,000 calls for 30 days", "All seven checks", "No signup"],
+    cta: "Create a sandbox",
+    href: "#live",
+  },
+  {
+    name: "Pro",
+    price: "$79",
+    note: "Proposed, per month",
+    features: ["Your real API behind the gateway", "100,000 calls a month", "7-day audit log", "Custom gateway domain"],
+    cta: "Join the waitlist",
+    href: "/waitlist?plan=pro",
+  },
+  {
+    name: "Enterprise",
+    price: "Let’s talk",
+    note: "Planned, annual",
+    features: ["SSO and identity mapping", "Slack and Teams approvals", "Private data plane", "Log export to Datadog or Splunk"],
+    cta: "Join the waitlist",
+    href: "/waitlist?plan=enterprise",
+  },
+];
+
 export default function Landing() {
-  const [mode, setMode] = useState(0);
-  const [faq, setFaq] = useState<number | null>(0);
-  const selected = modes[mode];
-  const config = JSON.stringify(
-    { mcpServers: { accord: { url: "https://mcp.edenbuilds.me/mcp" } } },
-    null,
-    2,
-  );
   return (
     <>
       <Header />
       <main id="main">
-        <section className="hero wrap">
-          <Reveal className="hero-copy">
-            <Link className="release-link" href="/docs">
-              <span className="release-square" /> Developer preview is here{" "}
-              <ArrowUpRight size={14} />
-            </Link>
-            <h1>
-              Give agents
-              <br />
-              access.
-              <br />
-              <span>Keep control.</span>
-            </h1>
-            <p className="hero-description">
-              The control layer between what your agents <em>can</em> do and
-              what they <em>should</em> do.
-            </p>
-            <div className="hero-actions">
-              <Link href="/workbench" className="button">
-                Try the workbench <ArrowUpRight size={17} />
-              </Link>
-              <Link href="/docs" className="text-link">
-                Read the docs <ArrowRight size={17} />
-              </Link>
+        <section className="hero2" id="try">
+          <div className="hero2-bg" aria-hidden="true">
+            <AsciiWaves color="#2e4234" background="#111a14" cell={13} />
+          </div>
+          <div className="hero2-noise" aria-hidden="true" />
+          <div className="shell">
+            <div className="hero2-copy">
+              <p className="kicker">MCP gateway. Free sandbox, no signup.</p>
+              <h1 className="display">
+                Connect your AI to any&nbsp;API.
+                <br />
+                <span className="lilac">Safely.</span>
+              </h1>
+              <p className="lede">
+                Paste a cURL command. Accord turns it into a tool your AI agent can use, then checks every call before
+                it runs: who can use it, how often, and what data comes&nbsp;back.
+              </p>
+              <div className="hero2-actions">
+                <CharStaggerPrimaryButton
+                  href="#live"
+                  btnText="Connect your agent"
+                  showArrow
+                  icon={ArrowRight}
+                  btnClassName="text-[#1b2a20] min-h-[54px] h-[54px] px-7 text-[16px]"
+                  bgClassName="bg-[#dcf49a] rounded-[10px]"
+                  hoverColor="#1b2a20"
+                />
+                <a href="#converter" className="btn btn-ghost btn-lg">
+                  Paste an API
+                </a>
+              </div>
+              <div className="hero2-clients">
+                <span>Works with any MCP client, including</span>
+                {CLIENTS.map((b) => (
+                  <span key={b} className="client">
+                    <BrandIcon name={b} size={18} mono /> {brandTitle(b)}
+                  </span>
+                ))}
+              </div>
             </div>
-            <p className="hero-footnote">
-              No account. No credentials. See the policy work.
-            </p>
-          </Reveal>
-          <Reveal className="hero-visual">
-            <GatewayArt />
-          </Reveal>
-        </section>
-        <section className="compat wrap">
-          <span>
-            Built on an open protocol.
-            <br />
-            <strong>Made for your existing stack.</strong>
-          </span>
-          <div className="client-names">
-            <span>
-              <Braces />
-              MCP
-            </span>
-            <span>Claude</span>
-            <span className="cursor-logo">Cursor</span>
-            <span>OpenAI</span>
-            <span>
-              <Terminal />
-              Your agent
-            </span>
+            <div className="hero2-demo" id="converter">
+              <Converter />
+            </div>
+            <div className="facts">
+              <div className="fact">
+                <NumberCounterOne stats={[{ value: "7" }]} textColor="#eef2e8" textSize="text-[44px]" fontWeight="semibold" />
+                <p>checks on every call, before anything runs</p>
+              </div>
+              <div className="fact">
+                <NumberCounterOne stats={[{ value: "1,000" }]} textColor="#eef2e8" textSize="text-[44px]" fontWeight="semibold" />
+                <p>free sandbox calls. No card, no signup</p>
+              </div>
+              <div className="fact">
+                <NumberCounterOne stats={[{ value: "4" }]} textColor="#eef2e8" textSize="text-[44px]" fontWeight="semibold" />
+                <p>input formats: cURL, OpenAPI, Swagger and Postman</p>
+              </div>
+            </div>
           </div>
-          <small>Protocol compatibility, not endorsements.</small>
         </section>
-        <section className="platform wrap" id="platform">
-          <div className="section-intro">
-            <p className="eyebrow">The missing control layer</p>
-            <h2>
-              Connect freely.
-              <br />
-              <span>Execute deliberately.</span>
-            </h2>
-            <p>
-              More tools should not mean more exposure. Put a clear boundary
-              between an agent’s intent and the systems it can change.
-            </p>
+
+        <section className="section dark" id="live">
+          <div className="shell live">
+            <div>
+              <p className="kicker">Live demo</p>
+              <h2 className="title">
+                Connect your agent.
+                <br />
+                <span className="soft">See it work in 30&nbsp;seconds.</span>
+              </h2>
+              <p className="lede">
+                Get a real MCP URL in one click. Add it to your agent, ask it something, and watch each call arrive here
+                as Accord checks&nbsp;it.
+              </p>
+              <ol className="live-steps">
+                <li>
+                  <div>
+                    <strong>Create a sandbox URL</strong>
+                    <span>One click. No account needed.</span>
+                  </div>
+                </li>
+                <li>
+                  <div>
+                    <strong>Add it to your agent</strong>
+                    <span>Claude Code, Cursor, VS Code or the Claude app.</span>
+                  </div>
+                </li>
+                <li>
+                  <div>
+                    <strong>Ask it to do something</strong>
+                    <span>Every call shows up live, with the decision and the time it took.</span>
+                  </div>
+                </li>
+              </ol>
+            </div>
+            <LiveDemo />
           </div>
-          <div className="platform-panel">
-            <div
-              className="tablist"
-              role="tablist"
-              aria-label="Platform capabilities"
-            >
-              {modes.map((m, i) => (
-                <button
-                  role="tab"
-                  aria-selected={mode === i}
-                  aria-controls="platform-detail"
-                  id={`platform-tab-${i}`}
-                  key={m.label}
-                  onClick={() => setMode(i)}
-                  className={mode === i ? "selected" : ""}
-                >
-                  <m.icon size={18} />
-                  {m.label}
-                  <span>0{i + 1}</span>
-                </button>
+        </section>
+
+        <section className="section" id="checks">
+          <div className="shell">
+            <div className="intro">
+              <p className="kicker">What happens on every call</p>
+              <h2 className="title">
+                A firewall for AI agents.
+                <br />
+                <span className="soft">Seven checks. Every&nbsp;call.</span>
+              </h2>
+              <p className="lede">
+                Your agent never talks to your API directly. Accord sits in between and decides what happens, then
+                trims what comes&nbsp;back.
+              </p>
+            </div>
+            <div className="flow" aria-label="How a call flows">
+              <span>Your agent</span>
+              <ArrowRight size={16} />
+              <span className="lilac">Accord checks</span>
+              <ArrowRight size={16} />
+              <span>Your API</span>
+              <ArrowRight size={16} />
+              <span className="lilac">Accord trims</span>
+              <ArrowRight size={16} />
+              <span>Your agent</span>
+            </div>
+            <div className="guard-grid">
+              {guards.map((g) => (
+                <article className="guard" key={g.title}>
+                  <g.icon size={24} />
+                  <h3>{g.title}</h3>
+                  <p>{g.text}</p>
+                  <p className="proof">{g.proof}</p>
+                </article>
               ))}
             </div>
-            <div
-              className="platform-detail"
-              id="platform-detail"
-              role="tabpanel"
-              aria-labelledby={`platform-tab-${mode}`}
-              key={mode}
-            >
-              <div>
-                <h3>{selected.title}</h3>
-                <p>{selected.text}</p>
-                <Link href="/workbench" className="text-link">
-                  Test a decision <ArrowUpRight size={17} />
-                </Link>
-              </div>
-              <div className="mini-trace">
-                <div className="trace-header">
-                  <span>Policy evaluation</span>
-                  <span>Interactive example</span>
-                </div>
-                <div className="trace-route">
-                  <span>
-                    <Terminal size={19} /> Agent
-                  </span>
-                  <ArrowRight size={19} />
-                  <span className="route-mark">
-                    <Mark size={22} /> Accord
-                  </span>
-                  <ArrowRight size={19} />
-                  <span>
-                    <Braces size={19} /> Tool
-                  </span>
-                </div>
-                <div className="trace-code">
-                  <code>{selected.trace}</code>
-                  <span className={selected.color}>{selected.decision}</span>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
-        <section className="principles wrap">
-          <article>
-            <Fingerprint size={27} />
-            <h3>Identity, before access.</h3>
-            <p>
-              Start with scoped gateway credentials. The roadmap connects human
-              and agent identity to every authorization decision.
-            </p>
-            <Link href="/docs#security">
-              Read the security boundary <ArrowUpRight size={16} />
-            </Link>
-          </article>
-          <article>
-            <LockKeyhole size={27} />
-            <h3>A hard stop means stop.</h3>
-            <p>
-              Explicit allowlists and call budgets run before upstream
-              execution. Approval-gated tools stay blocked in the preview.
-            </p>
-            <Link href="/workbench">
-              Try an agent retry loop <ArrowUpRight size={16} />
-            </Link>
-          </article>
-          <article>
-            <Braces size={27} />
-            <h3>Less context. More signal.</h3>
-            <p>
-              Choose the fields that matter. Inspect the exact JSON and byte
-              reduction before changing a response contract.
-            </p>
-            <Link href="/workbench?view=payload">
-              Open the payload pruner <ArrowUpRight size={16} />
-            </Link>
-          </article>
-        </section>
-        <section className="dark-section">
-          <div className="wrap developer-section">
-            <div>
-              <p className="eyebrow">A small first step</p>
-              <h2>
-                Meet Accord.
+
+        <section className="section" id="use-cases" style={{ paddingTop: 0 }}>
+          <div className="shell">
+            <div className="intro">
+              <p className="kicker">Use cases</p>
+              <h2 className="title">
+                Real work for your agents.
                 <br />
-                <span>From your agent.</span>
+                <span className="soft">With the guardrails built&nbsp;in.</span>
               </h2>
-              <p>
-                Connect to the public, read-only MCP preview. Inspect its
-                capabilities and evaluate a policy with the same engine used in
-                the workbench.
+            </div>
+            <div className="uc-grid">
+              {useCases.map((u) => (
+                <article className="uc" key={u.slug}>
+                  <div className="uc-brands">
+                    {u.brands.map((b) => (
+                      <BrandIcon key={b} name={b} size={26} />
+                    ))}
+                    <span className="uc-label">{u.label}</span>
+                  </div>
+                  <h3>{u.headline}</h3>
+                  <p>{u.summary}</p>
+                  <div className="uc-guard">
+                    <ShieldCheck size={16} />
+                    <span>
+                      <strong>{u.guardTitle}.</strong> {u.guard}
+                    </span>
+                  </div>
+                  <div className="uc-actions">
+                    <button type="button" className="btn" onClick={() => loadIntoConverter(u.input)}>
+                      Try it in the converter
+                    </button>
+                    <Link className="link" href={`/use-cases/${u.slug}`}>
+                      Read the use case <ArrowUpRight size={15} />
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section tint" id="deploy">
+          <div className="shell">
+            <div className="intro">
+              <p className="kicker">Deploy</p>
+              <h2 className="title">
+                Run it on your own servers.
+                <br />
+                <span className="soft">Or let us run&nbsp;it.</span>
+              </h2>
+              <p className="lede">
+                Your converted tools can run as your own MCP server. Your API key stays on the server, so the agent
+                never sees&nbsp;it.
               </p>
-              <Link href="/docs" className="button light">
-                Connect your client <ArrowUpRight size={17} />
-              </Link>
-              <div className="dev-note">
-                <ShieldCheck size={17} /> No access to your GitHub, Stripe, or
-                databases.
-              </div>
             </div>
-            <div className="code-window">
-              <div className="code-header">
-                <span>mcp.json</span>
-                <CopyButton text={config} />
+            <div className="deploy-grid">
+              <div className="deploy">
+                <h3>
+                  <BrandIcon name="vercel" size={20} /> Vercel
+                </h3>
+                <p>One click. Add your gateway’s manifest URL, your API key and a token for your agent.</p>
+                <a className="btn" href={VERCEL_DEPLOY} target="_blank" rel="noopener noreferrer">
+                  Deploy to Vercel <ArrowUpRight size={16} />
+                </a>
               </div>
-              <pre>{config}</pre>
-              <div className="code-footer">
-                <span>Available tools</span>
-                <code>accord_describe</code>
-                <code>accord_evaluate</code>
-              </div>
-            </div>
-          </div>
-        </section>
-        <section className="pricing wrap" id="pricing">
-          <div className="section-intro">
-            <p className="eyebrow">A business that scales with yours</p>
-            <h2>
-              Start with a boundary.
-              <br />
-              <span>Grow into a control plane.</span>
-            </h2>
-            <p>
-              Use the developer preview today. These are our proposed hosted
-              plans, with billing opening after the private beta.
-            </p>
-          </div>
-          <div className="pricing-grid">
-            {[
-              {
-                name: "Developer",
-                price: "$0",
-                sub: "Proposed free hosted plan",
-                text: "A clear starting point for your first agents.",
-                features: [
-                  "2 connected MCP servers",
-                  "1,000 tool calls / month",
-                  "Explicit tool policies",
-                  "Community documentation",
-                ],
-                cta: "Try the free preview",
-                href: "/workbench",
-              },
-              {
-                name: "Pro",
-                price: "$79",
-                sub: "Proposed / month",
-                text: "For teams taking agents into production.",
-                features: [
-                  "10 connected MCP servers",
-                  "100,000 tool calls / month",
-                  "Custom gateway domain",
-                  "7-day metadata retention",
-                ],
-                cta: "Read the beta plan",
-                href: "/roadmap#beta",
-              },
-              {
-                name: "Enterprise",
-                price: "Let’s talk",
-                sub: "Planned annual contracts",
-                text: "Your identity. Your infrastructure. Your rules.",
-                features: [
-                  "SSO and delegated identity",
-                  "Private data plane",
-                  "Export to your observability stack",
-                  "Evidence and compliance controls",
-                ],
-                cta: "Explore the enterprise path",
-                href: "/roadmap#enterprise",
-              },
-            ].map((p, i) => (
-              <article
-                className={`price-card ${i === 1 ? "featured" : ""}`}
-                key={p.name}
-              >
-                <div className="price-title">
-                  <h3>{p.name}</h3>
-                  {i === 1 && <span>For production teams</span>}
-                </div>
-                <p>{p.text}</p>
-                <div className="price">{p.price}</div>
-                <small>{p.sub}</small>
-                <Link
-                  href={p.href}
-                  className={`button ${i === 1 ? "" : "secondary"}`}
-                >
-                  {p.cta}
-                  <ArrowUpRight size={16} />
+              <div className="deploy">
+                <h3>
+                  <BrandIcon name="railway" size={20} /> Railway
+                </h3>
+                <p>Deploy the same template from GitHub. It takes about two minutes.</p>
+                <Link className="btn btn-ghost" href="/docs#railway">
+                  Railway steps <ArrowUpRight size={16} />
                 </Link>
-                <ul>
-                  {p.features.map((f) => (
-                    <li key={f}>
-                      <Check size={15} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-          <p className="pricing-note">
-            No payment collected. Hosted quotas, retention, and enterprise
-            features are not active in this preview.
-          </p>
-        </section>
-        <section className="faq wrap">
-          <div>
-            <p className="eyebrow">Before you connect</p>
-            <h2>
-              Clear answers.
-              <br />
-              <span>Clear boundaries.</span>
-            </h2>
-          </div>
-          <div>
-            {[
-              {
-                q: "What can I use right now?",
-                a: "The workbench evaluates real policy rules against illustrative scenarios, prunes JSON fields, and exports policies and decision receipts. The public MCP endpoint exposes two read-only tools. The repository includes a local gateway for configured remote MCP servers.",
-              },
-              {
-                q: "Is this an enterprise-ready hosted gateway?",
-                a: "Not yet. This is a developer preview. Managed accounts, OAuth identity brokering, billing, durable approvals, and SOC 2 assurance are planned. No compliance certifications or production SLAs are claimed.",
-              },
-              {
-                q: "Will my data train a model?",
-                a: "Accord does not call a model. The workbench processes scenarios in your browser. Public MCP evaluations run on Vercel and return a decision without application-level persistence. Do not put secrets or customer data in the public preview.",
-              },
-              {
-                q: "Can I run it in my own environment?",
-                a: "Yes. Run the single-process Node gateway in the repository with your own environment variables and explicit upstream configuration. It is an evaluation deployment, with in-memory budgets that reset on restart. Production multi-replica deployments require the durable quota and audit work in the roadmap.",
-              },
-            ].map((f, i) => (
-              <div className="faq-item" key={f.q}>
-                <button
-                  aria-expanded={faq === i}
-                  aria-controls={`faq-${i}`}
-                  onClick={() => setFaq(faq === i ? null : i)}
-                >
-                  {f.q}
-                  {faq === i ? <Minus size={18} /> : <Plus size={18} />}
-                </button>
-                {faq === i && <p id={`faq-${i}`}>{f.a}</p>}
               </div>
-            ))}
+              <div className="deploy">
+                <h3>
+                  <BrandIcon name="docker" size={20} /> Docker
+                </h3>
+                <p>Run it anywhere with one command. You need Docker and a gateway id.</p>
+                <code className="code-line">curl -sL https://mcp.edenbuilds.me/docker | bash -s -- YOUR_GATEWAY_ID</code>
+              </div>
+            </div>
+            <div className="upsell">
+              <div>
+                <strong>Don’t want to manage servers?</strong>
+                <p>Use the Accord gateway. One click, free for your first 1,000 calls.</p>
+              </div>
+              <a href="#live" className="btn btn-light">
+                Get a gateway URL <ArrowUpRight size={16} />
+              </a>
+            </div>
           </div>
         </section>
-        <section className="closing wrap">
-          <Mark size={48} />
-          <h2>
-            Let your agents work.
-            <br />
-            <span>Make the rules yours.</span>
-          </h2>
-          <Link href="/workbench" className="button">
-            Put a policy to the test <ArrowUpRight size={18} />
-          </Link>
-          <p>Built by Eden. Designed for what comes next.</p>
+
+        <section className="section" id="compare">
+          <div className="shell">
+            <div className="intro">
+              <p className="kicker">How Accord compares</p>
+              <h2 className="title">
+                MCP is the socket.
+                <br />
+                <span className="soft">Accord is the circuit&nbsp;breaker.</span>
+              </h2>
+              <p className="lede">
+                API gateways were built for apps calling APIs. Automation tools run fixed recipes. Accord is built for
+                agents that decide what to do next, and need limits while they&nbsp;do.
+              </p>
+            </div>
+            <Link className="btn btn-ghost" href="/compare">
+              See the full comparison <ArrowUpRight size={16} />
+            </Link>
+          </div>
+        </section>
+
+        <section className="section" id="pricing" style={{ paddingTop: 0 }}>
+          <div className="shell">
+            <div className="intro">
+              <p className="kicker">Pricing</p>
+              <h2 className="title">
+                Free while you try it.
+                <br />
+                <span className="soft">Fair when you ship&nbsp;it.</span>
+              </h2>
+              <p className="lede">
+                The sandbox is free today. The paid plans below are proposed and open after the private beta. We take no
+                payment&nbsp;now.
+              </p>
+            </div>
+            <div className="plans">
+              {plans.map((p) => (
+                <article className={`plan ${p.now ? "now" : ""}`} key={p.name}>
+                  <h3>{p.name}</h3>
+                  <div className="price">{p.price}</div>
+                  <p className="note">{p.note}</p>
+                  <ul>
+                    {p.features.map((f) => (
+                      <li key={f}>
+                        <Check size={15} /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link className={`btn ${p.now ? "" : "btn-ghost"}`} href={p.href}>
+                    {p.cta} <ArrowUpRight size={16} />
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section" id="faq" style={{ paddingTop: 0 }}>
+          <div className="shell faq2">
+            <div>
+              <p className="kicker">Questions</p>
+              <h2 className="title">
+                Straight answers
+                <br />
+                <span className="soft">for CTOs and&nbsp;SREs.</span>
+              </h2>
+            </div>
+            <div className="faq2-list">
+              <FAQGroup defaultOpenItems={["faq-0"]}>
+                {faqs.map((f, i) => (
+                  <FAQWrapper
+                    key={f.q}
+                    itemId={`faq-${i}`}
+                    className="faq2-item"
+                    titleClassName="faq2-title"
+                    iconSize={16}
+                    iconStrokeWidth={2}
+                    duration={0.45}
+                  >
+                    <FAQTitle>{f.q}</FAQTitle>
+                    <FAQContent className="faq2-body">{f.a}</FAQContent>
+                  </FAQWrapper>
+                ))}
+              </FAQGroup>
+            </div>
+          </div>
+        </section>
+
+        <section className="section dark">
+          <div className="shell closing2">
+            <Mark size={44} />
+            <h2 className="title">
+              Your agents, with limits
+              <br />
+              <span className="soft">you set&nbsp;yourself.</span>
+            </h2>
+            <p className="lede">Start with one cURL command. Ship with every call checked.</p>
+            <div className="row">
+              <a href="#live" className="btn btn-light btn-lg">
+                Connect your agent <ArrowUpRight size={18} />
+              </a>
+              <Link href="/waitlist" className="btn btn-ghost btn-lg">
+                Join the waitlist
+              </Link>
+            </div>
+          </div>
         </section>
       </main>
       <Footer />

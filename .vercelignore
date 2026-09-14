@@ -1,0 +1,6 @@
+landing-reveal/
+qa/
+node_modules/
+.git/
+.next/
+.env*

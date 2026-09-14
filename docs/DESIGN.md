@@ -1,10 +1,22 @@
 # Accord design direction
 
-Warm paper, graphite green, muted sage, restrained lime. Geist typography; generous negative space; sharp rules; small radii. A gateway slab illustration establishes an architectural product, not a chat app. Dashed path motion represents routing; animation has a pause control and respects reduced motion. Content enters with a brief scoped GSAP stagger. Tabs, FAQ, copy/export actions, policy outcomes, and JSON projection are functional.
+Green, with lilac accents. Deep forest (#111a14) for hero, product and footer surfaces. Paper (#f7f8f3) for reading sections. Lime (#dcf49a) marks "allowed" and primary actions. Lilac (#c9b8f2) marks focus, highlights, approval holds and JSON keys. There is no navy or indigo. Type is Geist. Monospace appears only in code. Headings use `text-wrap: balance` and body text `text-wrap: pretty`, with `&nbsp;` on key closing words to avoid orphans and widows.
 
-Reference lineage:
-- BYQ Supply `nextwell-hero-2`: https://app.byq.supply/sections/nextwell-hero-2. Used for warm editorial hierarchy, spacing, and restrained entrance structure. No fabricated ratings, media, or testimonials carried forward.
-- Creative Frontend Engine `codegrid-aladesign-landing-page-reveal-nextjs`: short reveal timing and GSAP scoped cleanup adapted in components/reveal.tsx. The source archive remains local and gitignored. No paid photographs, complete source template, or copied archive is distributed.
-- Gateway SVG is a project-specific diagram. Catalog animation assets did not implement this semantic system illustration.
+Logo: the A-mark supplied on 14-09-2026, traced by hand as a single even-odd SVG path (components/ui.tsx `Mark`). The registered-mark symbol is not used.
 
-No third-party runtime asset credentials are required. BYQ credential is not stored in the repository, client bundle, or deployment.
+## Credits and lineage
+
+- **Originkit hero-21:** the ASCII wave field (components/originkit/ui/hero-21/character-waves.tsx, typed and trimmed) and the dither noise strip (public/originkit/hero-21/nav-noise.png). Its sample logos and dashboard card were removed.
+- **Originkit footer-02:** the Tetris canvas in the footer (components/originkit/ui/footer-02/tetris.tsx).
+- **Hyperiux Vault:**
+  - lines-loader (option 2, restyled; the once-per-session site loader)
+  - scramble-text (text prop added)
+  - border-beam (Test this tool)
+  - number-counter (hero facts)
+  - animated-faq (FAQ)
+  - char-stagger-primary-button (hero CTA)
+  - dotted-grid (waitlist background, demo hints removed)
+- **theSVG** (github.com/glincker/thesvg): every brand icon.
+- **References:** libraries.dev (agent-friendly structure) and transitions.dev (CSS micro-states).
+
+GSAP drives Hyperiux effects and the old reveal. No element is animated by two libraries. Originkit's `motion` reveal was removed.

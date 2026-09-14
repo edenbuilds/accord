@@ -1,6 +1,10 @@
-export default function robots() {
+import type { MetadataRoute } from "next";
+import { SITE } from "@/lib/content";
+
+export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: "*", allow: "/", disallow: "/mcp" },
-    sitemap: "https://mcp.edenbuilds.me/sitemap.xml",
+    rules: { userAgent: "*", allow: "/", disallow: ["/mcp", "/g/", "/api/"] },
+    sitemap: `${SITE}/sitemap.xml`,
+    host: SITE,
   };
 }

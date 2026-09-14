@@ -1,0 +1,64 @@
+{
+  "components": {
+    "lines-loader": {
+      "version": "1.0.1",
+      "installedAt": "2026-09-14T15:26:00.662Z",
+      "files": {
+        "src/components/effects/lines-loader/index.tsx": "sha256:2ec0f0a548f75253967972827b539a8836d14432875eca2c52f85b106d0a7e03",
+        "src/components/effects/lines-loader/LinesLoading.tsx": "sha256:696169f716c8bce96ff5cea02c69b2bd7c7ec5d7cfe7af9327f2427b06cd01bd",
+        "src/components/effects/lines-loader/CenterLinesLoading.tsx": "sha256:2cb9b73209eaea84a2e0562ee16dda38f28fbfb53a09ed85cda1d0da28df118f",
+        "src/components/effects/lines-loader/utils.ts": "sha256:ce076704752e61f154d6f31cc26ab266466f8c7be53093c4808fcc20c8ea041e"
+      }
+    },
+    "scramble-text": {
+      "version": "1.0.1",
+      "installedAt": "2026-09-14T15:26:07.496Z",
+      "files": {
+        "src/components/effects/scramble-text/index.tsx": "sha256:187854cac339a9c3a0659f715cc097e4a721cf3f3590efc0e3d627484e1da73a"
+      }
+    },
+    "border-beam": {
+      "version": "1.0.2",
+      "installedAt": "2026-09-14T15:26:14.769Z",
+      "files": {
+        "src/components/effects/border-beam/index.tsx": "sha256:c48f37eafba5dd83564feaa0dd64e4a75bf9f2e4068908be253ce55c5122e935",
+        "src/components/effects/border-beam/BorderBeam.tsx": "sha256:0a155141281813f508f2a260bff47a4ced44b72a7846116ed91d21e3663d84b8",
+        "src/components/effects/border-beam/PulseDriver.ts": "sha256:f721e7b8a5cfb65d0631942e59a1254994a6b8c8e7164360f07e1c9c4e5585c9",
+        "src/components/effects/border-beam/styles.ts": "sha256:d9a83973f0cdf3d54e43d26a2675074a43e83fa58a091dc2c4bca78f5d5fe548"
+      }
+    },
+    "number-counter": {
+      "version": "1.0.1",
+      "installedAt": "2026-09-14T15:26:20.862Z",
+      "files": {
+        "src/components/effects/number-counter/index.tsx": "sha256:81aefa0aa85e943e39d6a8fa43a4a140ba968029b65f2ae438fe472e09de1a06",
+        "src/components/effects/number-counter/NumberCounterOne.tsx": "sha256:4b7916ce70aa664fa56d72a07a76a2f76cb9a07abd42a30de56479b1027a9288",
+        "src/components/effects/number-counter/NumberCounterTwo.tsx": "sha256:dab6cbc2a6dbf854369449e6d2915e39adefdf6584ffe1231396dc4ee52353de",
+        "src/components/effects/number-counter/NumberCounterThree.tsx": "sha256:582fbe3566a307fe2f457f05a69e1b3a66e6db02317b633dcd39b79d07ee8e70"
+      }
+    },
+    "animated-faq": {
+      "version": "1.0.1",
+      "installedAt": "2026-09-14T15:26:27.334Z",
+      "files": {
+        "src/components/effects/animated-faq/index.tsx": "sha256:0d11604d09bc5b8eae1f01ce8fec0fa62c6250a6e6562f95113199c69b76fdf1",
+        "src/components/effects/animated-faq/AnimatedFaqComp.tsx": "sha256:70dedbf190e2734d53ad5a9ddb99e5f91a38cc5df9a030b9fc25e58c6979adb0"
+      }
+    },
+    "char-stagger-primary-button": {
+      "version": "1.1.0",
+      "installedAt": "2026-09-14T15:26:34.687Z",
+      "files": {
+        "src/components/effects/char-stagger-primary-button/index.tsx": "sha256:79064e727133bd7b1fb619d35bb73151881e83b49121d9604e391711000cbc02"
+      }
+    },
+    "dotted-grid": {
+      "version": "1.0.1",
+      "installedAt": "2026-09-14T15:26:40.452Z",
+      "files": {
+        "src/components/effects/dotted-grid/index.tsx": "sha256:7e4a3460659d439a37ef48de1750e24fb0bf133bdd5967710700732e64669722",
+        "src/components/effects/dotted-grid/createSuspendedRaf.ts": "sha256:98c2603a726099abd22e6efe779f31b5bb392ad5a608bf8fbd47c7a7f242d367"
+      }
+    }
+  }
+}
