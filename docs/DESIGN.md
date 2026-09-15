@@ -1,6 +1,6 @@
 # Accord design direction
 
-Green, with lilac accents. Deep forest (#111a14) for hero, product and footer surfaces. Paper (#f7f8f3) for reading sections. Lime (#dcf49a) marks "allowed" and primary actions. Lilac (#c9b8f2) marks focus, highlights, approval holds and JSON keys. There is no navy or indigo. Type is Geist. Monospace appears only in code. Headings use `text-wrap: balance` and body text `text-wrap: pretty`, with `&nbsp;` on key closing words to avoid orphans and widows.
+Updated 15-09-2026. Paper (#f7f8f3) is the default across the site, converter and gateway dashboard. Green (#d8e9bd) anchors the live demo; dark green type and buttons provide contrast. Dither stays on margins and the hero uses the supplied Originkit ASCII wave. No startup loader. Geist headings, ordinary readable labels, monospace only for code. Existing vendor assets remain credited below.
 
 Logo: the A-mark supplied on 14-09-2026, traced by hand as a single even-odd SVG path (components/ui.tsx `Mark`). The registered-mark symbol is not used.
 

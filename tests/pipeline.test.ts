@@ -170,3 +170,27 @@ test("Fuzzed arguments always get a decision and never crash the pipeline", asyn
     }
   assert.equal(({} as Record<string, unknown>).polluted, undefined);
 });
+
+test("An execution failure is reported as a failure instead of an allowed result", async () => {
+  const out = await runCall(memoryStore(), { gateway: "failure", manifest, policy, role: "agent", toolName: "list_orders", args: {}, execute: async () => { throw new Error("offline"); } });
+  assert.equal(out.decision.rule, "execution.failed");
+  assert.equal(out.receipt.outcome, "error");
+  assert.equal(out.result, undefined);
+});
+
+test("Receipt sizes count UTF-8 bytes for non-ASCII data", async () => {
+  const result = { message: "नमस्कार 世界" };
+  const out = await runCall(memoryStore(), { gateway: "bytes", manifest, policy, role: "agent", toolName: "list_orders", args: {}, execute: async () => result });
+  assert.equal(out.receipt.bytesRaw, Buffer.byteLength(JSON.stringify(result)));
+  assert.equal(out.receipt.bytesOut, Buffer.byteLength(JSON.stringify(result)));
+});
+
+test("A changed tool contract does not reuse an earlier cached response", async () => {
+  const store = memoryStore();
+  const input = { gateway: "changed", manifest, policy, role: "agent", toolName: "list_orders", args: {}, execute: async () => ({ value: "first" }) };
+  await runCall(store, input);
+  const changed = { ...manifest, tools: manifest.tools.map(t => ({ ...t, path: "/new-orders" })) };
+  const out = await runCall(store, { ...input, manifest: changed, execute: async () => ({ value: "new" }) });
+  assert.equal(out.receipt.cached, false);
+  assert.deepEqual(out.result, { value: "new" });
+});

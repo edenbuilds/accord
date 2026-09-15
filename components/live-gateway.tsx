@@ -23,6 +23,7 @@ export function formatIST(iso: string, withTime = true) {
 
 const RULES: Record<string, string> = {
   "policy.allow": "Allowed",
+  "execution.failed": "Execution failed",
   "loop.repeat": "Loop stopped",
   "rbac.tool": "Not allowed for this role",
   "approval.required": "Held for approval",
@@ -173,6 +174,30 @@ export default function LiveGateway({
   const [tab, setTab] = useState("claude-code");
   const [testing, setTesting] = useState<"idle" | "running" | "done" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [catalog, setCatalog] = useState<{ name: string; inputSchema: Record<string, unknown> }[]>([]);
+  const [selectedTool, setSelectedTool] = useState("");
+  const [argumentsText, setArgumentsText] = useState("{}");
+  const [responseText, setResponseText] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    const client = new Client({ name: "accord-playground", version: "1.0.0" });
+    void (async () => {
+      try {
+        await client.connect(new StreamableHTTPClientTransport(new URL(url)));
+        const result = await client.listTools();
+        if (cancelled) return;
+        setCatalog(result.tools);
+        const first = result.tools.find(t => t.annotations?.readOnlyHint) ?? result.tools[0];
+        if (first) {
+          setSelectedTool(first.name);
+          setArgumentsText(JSON.stringify(argsFromSchema(first.inputSchema, first.name), null, 2));
+        }
+      } catch {
+        if (!cancelled) setMessage("Tool discovery failed. Reload this page to reconnect.");
+      } finally { await client.close().catch(() => {}); }
+    })();
+    return () => { cancelled = true; void client.close().catch(() => {}); };
+  }, [url]);
   const name = `accord-${id.slice(0, 6).toLowerCase().replace(/[^a-z0-9]/g, "x")}`;
   const list = snippets(url, name);
   const current = list.find((s) => s.id === tab) ?? list[0];
@@ -181,13 +206,17 @@ export default function LiveGateway({
   async function testCall() {
     setTesting("running");
     setMessage("");
+    setResponseText("");
     const client = new Client({ name: "accord-browser-test", version: "1.0.0" });
     try {
       await client.connect(new StreamableHTTPClientTransport(new URL(url)));
       const { tools } = await client.listTools();
-      const tool = tools.find((t) => t.annotations?.readOnlyHint) ?? tools[0];
+      const tool = tools.find((t) => t.name === selectedTool);
       if (!tool) throw new Error("This gateway has no tools for this role.");
-      const res = await client.callTool({ name: tool.name, arguments: argsFromSchema(tool.inputSchema, tool.name) });
+      const args = JSON.parse(argumentsText);
+      if (!args || typeof args !== "object" || Array.isArray(args)) throw new Error("Arguments must be a JSON object.");
+      const res = await client.callTool({ name: tool.name, arguments: args });
+      setResponseText(JSON.stringify(res, null, 2));
       setMessage(
         `Called ${tool.name} through the real MCP endpoint. ${res.isError ? "Accord stopped it. The feed shows why." : "Sample data came back."}`,
       );
@@ -233,7 +262,7 @@ export default function LiveGateway({
       </div>
       {receipts.length === 0 ? (
         <div className="lg-wait">
-          <span className="lg-pulse" /> Waiting for your agent’s first call.
+          Waiting for your agent’s first call.
         </div>
       ) : (
         <ul className="lg-feed" aria-live="polite">
@@ -254,10 +283,28 @@ export default function LiveGateway({
           ))}
         </ul>
       )}
+      <div className="lg-tester">
+        <h3>Test the MCP endpoint</h3>
+        <p className="lg-help">Choose a tool and edit its JSON inputs. This sends a real MCP call; the sandbox returns sample data.</p>
+        <label>Tool to call
+          <select aria-label="Live tool" value={selectedTool} onChange={e => {
+            setSelectedTool(e.target.value);
+            const tool = catalog.find(t => t.name === e.target.value);
+            if (tool) setArgumentsText(JSON.stringify(argsFromSchema(tool.inputSchema, tool.name), null, 2));
+            setResponseText(""); setMessage("");
+          }}>
+            {!catalog.length && <option value="">Discovering tools…</option>}
+            {catalog.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+          </select>
+        </label>
+        <label>Arguments
+          <textarea aria-label="Live arguments" value={argumentsText} onChange={e => setArgumentsText(e.target.value)} spellCheck={false} />
+        </label>
+      </div>
       <div className="lg-row">
-        <button type="button" className="btn btn-ghost" onClick={testCall} disabled={testing === "running"}>
+        <button type="button" className="btn btn-ghost" onClick={testCall} disabled={testing === "running" || !selectedTool}>
           {testing === "running" ? <Loader2 size={16} className="spin" /> : <Play size={16} />}
-          No agent handy? Send a test call
+          Send a test call
         </button>
         {showPageLink && (
           <Link href={`/g/${id}`} className="link">
@@ -266,14 +313,15 @@ export default function LiveGateway({
         )}
       </div>
       {message && <p className={testing === "error" ? "cv-error" : "lg-help"}>{message}</p>}
+      {responseText && <details className="lg-response" open><summary>MCP response</summary><CopyButton text={responseText} label="Copy response" /><pre>{responseText}</pre></details>}
       {receipts.some((r) => r.effect === "allow") && (
         <div className="lg-hook">
           <p>
             <strong>It works.</strong> This sandbox stays live for 30 days or 1,000 calls. To connect your real API and
-            keep a full audit log, get a free account as soon as they open.
+            use the self-hosted template. Hosted accounts are planned.
           </p>
-          <Link href={`/waitlist?from=${id}`} className="btn">
-            Join the waitlist <ArrowUpRight size={16} />
+          <Link href="/docs#quickstart" className="btn">
+            Connect a real API <ArrowUpRight size={16} />
           </Link>
         </div>
       )}

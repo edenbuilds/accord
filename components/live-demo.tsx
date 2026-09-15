@@ -50,7 +50,7 @@ export default function LiveDemo({ initial = useCases[0].slug }: { initial?: str
       <p className="lg-help">Pick what your agent should do.</p>
       <div className="live-templates" role="group" aria-label="Sandbox template">
         {useCases.map((u) => (
-          <button key={u.slug} type="button" aria-pressed={pick === u.slug} onClick={() => setPick(u.slug)}>
+          <button key={u.slug} type="button" disabled={state.status === "creating"} aria-pressed={pick === u.slug} onClick={() => setPick(u.slug)}>
             {u.brands.map((b) => (
               <BrandIcon key={b} name={b} size={16} />
             ))}

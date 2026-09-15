@@ -5,7 +5,7 @@ import { convert, type ManifestTool } from "@/lib/convert";
 import { buildRequest, exampleArgs, mockResponse } from "@/lib/sandbox";
 import { defaultGatewayPolicy, matches, memoryStore, runCall, visibleTools, type CallResult, type GatewayPolicy } from "@/lib/pipeline";
 import { quickSamples, templateFor } from "@/lib/use-cases";
-import { CopyButton } from "./ui";
+import { CopyButton, downloadJson } from "./ui";
 import BeamBorder from "./effects/border-beam/BorderBeam";
 import LiveGateway, { rememberGateway, savings } from "./live-gateway";
 
@@ -75,7 +75,7 @@ type Turn = {
 type Gateway = { state: "idle" | "creating" } | { state: "ready"; id: string; url: string } | { state: "error"; error: string };
 
 export default function Converter({ initial }: { initial?: string }) {
-  const [input, setInput] = useState(initial ?? quickSamples[0].input);
+  const [input, setInput] = useState(initial ?? quickSamples[1].input);
   const deferred = useDeferredValue(input);
   const result = useMemo(() => convert(deferred), [deferred]);
   const tools = useMemo(() => (result.ok ? result.manifest.tools : []), [result]);
@@ -87,7 +87,9 @@ export default function Converter({ initial }: { initial?: string }) {
     () => new Set(result.ok && policy ? visibleTools(result.manifest, policy, "agent").map((t) => t.name) : []),
     [result, policy],
   );
-  const signature = result.ok ? `${result.manifest.baseUrl}|${tools.map((t) => t.name).join(",")}` : "";
+  const signature = deferred;
+  const latestInput = useRef(input);
+  latestInput.current = input;
   const [selected, setSelected] = useState(0);
   const tool = tools[Math.min(selected, Math.max(0, tools.length - 1))];
   const [view, setView] = useState<"tools" | "json">("tools");
@@ -184,6 +186,7 @@ export default function Converter({ initial }: { initial?: string }) {
   }
 
   async function createGateway() {
+    const submittedInput = input;
     setGateway({ state: "creating" });
     try {
       const res = await fetch("/api/gateways", {
@@ -195,7 +198,7 @@ export default function Converter({ initial }: { initial?: string }) {
       if (!res.ok) throw new Error(data.error ?? "The gateway could not be created. Try again.");
       const name = result.ok ? result.manifest.name : "API";
       rememberGateway({ id: data.id, name, url: data.url, createdAt: new Date().toISOString() });
-      setGateway({ state: "ready", id: data.id, url: data.url });
+      if (latestInput.current === submittedInput) setGateway({ state: "ready", id: data.id, url: data.url });
     } catch (e) {
       setGateway({ state: "error", error: e instanceof Error ? e.message : "Something went wrong." });
     }
@@ -284,7 +287,7 @@ export default function Converter({ initial }: { initial?: string }) {
                 </p>
               )}
               <ul>
-                {tools.slice(0, 40).map((t, i) => (
+                {tools.map((t, i) => (
                   <li key={t.name}>
                     <button
                       type="button"
@@ -300,13 +303,13 @@ export default function Converter({ initial }: { initial?: string }) {
                   </li>
                 ))}
               </ul>
-              {tools.length > 40 && <p className="cv-empty">And {tools.length - 40} more.</p>}
+
             </div>
           )}
           {result.ok && (
             <div className="cv-actions">
               <BeamBorder size="line" colorVariant="mono" theme="dark" active={!testing} borderRadius={10} className="cv-beam">
-                <button type="button" className="btn btn-light" onClick={() => setTesting(true)}>
+                <button type="button" className="btn btn-light" onClick={() => { setTesting(true); requestAnimationFrame(() => document.querySelector(".cv-playground")?.scrollIntoView({ behavior: "smooth", block: "center" })); }}>
                   <Play size={16} /> Test this tool
                 </button>
               </BeamBorder>
@@ -314,11 +317,12 @@ export default function Converter({ initial }: { initial?: string }) {
                 type="button"
                 className="btn btn-ghost"
                 onClick={createGateway}
-                disabled={gateway.state === "creating"}
+                disabled={gateway.state === "creating" || input !== deferred}
               >
                 {gateway.state === "creating" ? <Loader2 size={16} className="spin" /> : <ArrowUpRight size={16} />}
-                Get a live MCP URL
+                Create sandbox URL
               </button>
+              <button type="button" className="link" onClick={() => result.ok && downloadJson(result.manifest, "tools.json")}>Download manifest</button>
             </div>
           )}
         </div>
@@ -326,7 +330,7 @@ export default function Converter({ initial }: { initial?: string }) {
 
       {gateway.state === "ready" && (
         <div className="cv-live">
-          <h3>Your MCP server is live. Connect your agent.</h3>
+          <h3>Your sandbox is live. It returns sample data.</h3>
           <LiveGateway id={gateway.id} url={gateway.url} />
         </div>
       )}

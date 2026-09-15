@@ -6,8 +6,8 @@ import Converter, { loadIntoConverter } from "./converter";
 import LiveDemo from "./live-demo";
 import { BrandIcon, brandTitle, type Brand } from "./brand-icon";
 import AsciiWaves from "./originkit/ui/hero-21/character-waves";
-import CharStaggerPrimaryButton from "./effects/char-stagger-primary-button";
-import NumberCounterOne from "./effects/number-counter/NumberCounterOne";
+
+
 import { FAQContent, FAQGroup, FAQTitle, FAQWrapper } from "./effects/animated-faq/AnimatedFaqComp";
 import { useCases } from "@/lib/use-cases";
 import { faqs } from "@/lib/content";
@@ -31,9 +31,9 @@ const guards = [
   },
   {
     icon: Hand,
-    title: "A person approves the risky ones",
-    text: "Deletes, refunds and account changes are held. Nothing is sent to your API until someone approves.",
-    proof: "The hold works today. Slack approval buttons are on the roadmap.",
+    title: "Risky actions stop for review",
+    text: "Configured risky tools are blocked before execution.",
+    proof: "Approval and resume workflows are planned.",
   },
   {
     icon: Scissors,
@@ -90,33 +90,25 @@ export default function Landing() {
       <main id="main">
         <section className="hero2" id="try">
           <div className="hero2-bg" aria-hidden="true">
-            <AsciiWaves color="#2e4234" background="#111a14" cell={13} />
+            <AsciiWaves color="#729b65" background="#f7f8f3" cell={13} />
           </div>
           <div className="hero2-noise" aria-hidden="true" />
           <div className="shell">
             <div className="hero2-copy">
-              <p className="kicker">MCP gateway. Free sandbox, no signup.</p>
+              <p className="kicker">Your API. Your agent. Your rules.</p>
               <h1 className="display">
-                Connect your AI to any&nbsp;API.
+                Turn your API into
                 <br />
-                <span className="lilac">Safely.</span>
+                <span className="lilac">an MCP server.</span>
               </h1>
               <p className="lede">
-                Paste a cURL command. Accord turns it into a tool your AI agent can use, then checks every call before
-                it runs: who can use it, how often, and what data comes&nbsp;back.
+                Import your API. Test its tools. Connect your agent.
+                Try the guardrails in a free sandbox, then deploy a server for your real API.
               </p>
               <div className="hero2-actions">
-                <CharStaggerPrimaryButton
-                  href="#live"
-                  btnText="Connect your agent"
-                  showArrow
-                  icon={ArrowRight}
-                  btnClassName="text-[#1b2a20] min-h-[54px] h-[54px] px-7 text-[16px]"
-                  bgClassName="bg-[#dcf49a] rounded-[10px]"
-                  hoverColor="#1b2a20"
-                />
-                <a href="#converter" className="btn btn-ghost btn-lg">
-                  Paste an API
+                <a href="#converter" className="btn btn-lg">Build your MCP server <ArrowRight size={18} /></a>
+                <a href="#live" className="btn btn-ghost btn-lg">
+                  Try the live demo
                 </a>
               </div>
               <div className="hero2-clients">
@@ -133,15 +125,15 @@ export default function Landing() {
             </div>
             <div className="facts">
               <div className="fact">
-                <NumberCounterOne stats={[{ value: "7" }]} textColor="#eef2e8" textSize="text-[44px]" fontWeight="semibold" />
+                <strong>7</strong>
                 <p>checks on every call, before anything runs</p>
               </div>
               <div className="fact">
-                <NumberCounterOne stats={[{ value: "1,000" }]} textColor="#eef2e8" textSize="text-[44px]" fontWeight="semibold" />
+                <strong>1,000</strong>
                 <p>free sandbox calls. No card, no signup</p>
               </div>
               <div className="fact">
-                <NumberCounterOne stats={[{ value: "4" }]} textColor="#eef2e8" textSize="text-[44px]" fontWeight="semibold" />
+                <strong>4</strong>
                 <p>input formats: cURL, OpenAPI, Swagger and Postman</p>
               </div>
             </div>
@@ -196,8 +188,7 @@ export default function Landing() {
                 <span className="soft">Seven checks. Every&nbsp;call.</span>
               </h2>
               <p className="lede">
-                Your agent never talks to your API directly. Accord sits in between and decides what happens, then
-                trims what comes&nbsp;back.
+                Explore the sandbox’s seven checks, inspect every decision, and see exactly what comes back.
               </p>
             </div>
             <div className="flow" aria-label="How a call flows">
@@ -270,9 +261,9 @@ export default function Landing() {
             <div className="intro">
               <p className="kicker">Deploy</p>
               <h2 className="title">
-                Run it on your own servers.
+                Ready for your real API?
                 <br />
-                <span className="soft">Or let us run&nbsp;it.</span>
+                <span className="soft">Deploy your own server.</span>
               </h2>
               <p className="lede">
                 Your converted tools can run as your own MCP server. Your API key stays on the server, so the agent
@@ -309,7 +300,7 @@ export default function Landing() {
             <div className="upsell">
               <div>
                 <strong>Don’t want to manage servers?</strong>
-                <p>Use the Accord gateway. One click, free for your first 1,000 calls.</p>
+                <p>Try a hosted sandbox with sample responses. Managed real API hosting is on the roadmap.</p>
               </div>
               <a href="#live" className="btn btn-light">
                 Get a gateway URL <ArrowUpRight size={16} />

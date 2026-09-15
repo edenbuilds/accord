@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "./site.css";
-import SiteLoader from "@/components/site-loader";
+
 import { SITE, SUMMARY } from "@/lib/content";
 
 const sans = Geist({ subsets: ["latin"], variable: "--font-sans" });
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   category: "technology",
 };
 
-export const viewport: Viewport = { themeColor: "#111a14" };
+export const viewport: Viewport = { themeColor: "#f7f8f3" };
 
 const orgLd = {
   "@context": "https://schema.org",
@@ -80,7 +80,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <a className="skip" href="#main">
           Skip to content
         </a>
-        <SiteLoader />
         {children}
         <script
           type="application/ld+json"

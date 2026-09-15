@@ -248,7 +248,8 @@ const blocked = (rule: string, reason: string, effect: Decision["effect"] = "den
   rule,
   reason,
 });
-const size = (v: unknown) => (v === undefined ? 0 : JSON.stringify(v)?.length ?? 0);
+const utf8Size = (text: string) => new TextEncoder().encode(text).byteLength;
+const size = (v: unknown) => (v === undefined ? 0 : utf8Size(JSON.stringify(v) ?? ""));
 
 export async function runCall(store: Store, input: CallInput): Promise<CallResult> {
   const started = input.now ?? Date.now();
@@ -267,7 +268,7 @@ export async function runCall(store: Store, input: CallInput): Promise<CallResul
       run: () => {
         if (typeof input.args !== "object" || input.args === null || Array.isArray(input.args))
           return blocked("input.shape", "Tool arguments must be a JSON object.");
-        if (argsText.length > 64_000) return blocked("input.size", "The arguments are larger than 64 KB.");
+        if (utf8Size(argsText) > 64_000) return blocked("input.size", "The arguments are larger than 64 KB.");
       },
     },
     {
@@ -346,7 +347,7 @@ export async function runCall(store: Store, input: CallInput): Promise<CallResul
   let bytesRaw = 0;
   const counter = { n: 0 };
   if (decision.effect === "allow" && tool) {
-    const cacheKey = `cache:${g}:${argsDigest}`;
+    const cacheKey = `cache:${g}:${input.role}:${digest(canonical(policy))}:${digest(canonical(tool))}:${argsDigest}`;
     const cacheable = policy.cacheSeconds > 0 && (tool.annotations.readOnlyHint || hit(policy.cache, tool));
     if (cacheable)
       try {
@@ -365,6 +366,7 @@ export async function runCall(store: Store, input: CallInput): Promise<CallResul
           } catch {}
       } catch {
         outcome = "error";
+        decision = blocked("execution.failed", "The tool failed. No successful response was returned.");
       }
     if (outcome !== "error") {
       outcome = "sample_returned";
@@ -401,7 +403,7 @@ export async function runCall(store: Store, input: CallInput): Promise<CallResul
     outcome,
     cached,
     latencyMs: Date.now() - clockStart,
-    bytesIn: argsText.length,
+    bytesIn: utf8Size(argsText),
     bytesRaw,
     bytesOut: size(result),
     redacted: counter.n,

@@ -56,7 +56,7 @@ function luminance(hex: string) {
 // wordmarks fall back to their square mark in the brand colour.
 function pick(icon: Icon, mono: boolean): { svg: string; flat: boolean; tint?: string } {
   const variants = (icon.variants ?? {}) as Record<string, string | undefined>;
-  if (mono) return { svg: variants.mono ?? icon.svg, flat: true };
+  if (mono) return { svg: (variants.mono ?? icon.svg).replace(/fill="(?:#[0-9a-fA-F]{3,8}|white|black)"/g, 'fill="currentColor"'), flat: true };
   const [, , w, h] = ((icon.svg.match(/viewBox="([^"]+)"/) ?? [])[1] ?? "0 0 1 1").split(/\s+/).map(Number);
   if (w / h > 1.6 && variants.mono) return { svg: variants.mono, flat: true, tint: `#${icon.hex}` };
   const fills = [...new Set([...icon.svg.matchAll(/fill="#([0-9a-fA-F]{3,6})"/g)].map((m) => m[1].toLowerCase()))];

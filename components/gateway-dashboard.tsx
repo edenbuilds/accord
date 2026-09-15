@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import LiveGateway, { formatIST, ruleLabel, savings, useGatewayStatus } from "./live-gateway";
-import { CopyButton } from "./ui";
+import { CopyButton, downloadJson } from "./ui";
 import { BrandIcon } from "./brand-icon";
 import { VERCEL_DEPLOY } from "./landing";
 
@@ -50,7 +50,7 @@ export default function GatewayDashboard({ id }: { id: string }) {
             </div>
             <div>
               <strong>{data.receipts.filter((r) => r.effect !== "allow").length}</strong>
-              <span>calls stopped or held</span>
+              <span>stopped or held in recent receipts</span>
             </div>
           </div>
         )}
@@ -121,7 +121,7 @@ export default function GatewayDashboard({ id }: { id: string }) {
 
       {data && data.receipts.length > 0 && (
         <div className="gw-panel" style={{ marginTop: 20 }}>
-          <h2>Audit receipts</h2>
+          <div className="lg-row"><h2>Recent receipts</h2><button className="btn btn-ghost" type="button" onClick={() => downloadJson(data.receipts, `accord-${id}-receipts.json`)}>Export receipts</button></div>
           <div className="table-wrap">
             <table className="rtable">
               <thead>
@@ -151,7 +151,7 @@ export default function GatewayDashboard({ id }: { id: string }) {
                       {r.redacted ? `, ${r.redacted} fields removed` : ""}
                     </td>
                     <td>
-                      <code>{r.id}</code>
+                      <details><summary>Inspect receipt</summary><pre className="receipt-json">{JSON.stringify(r, null, 2)}</pre></details>
                     </td>
                   </tr>
                 ))}
