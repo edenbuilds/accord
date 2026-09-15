@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Manrope, Geist_Mono, Geist_Pixel } from "next/font/google";
 import "./globals.css";
 import "./site.css";
 
+import SiteLoader from "@/components/site-loader";
 import { SITE, SUMMARY } from "@/lib/content";
 
-const sans = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const sans = Manrope({ subsets: ["latin"], variable: "--font-sans" });
+const pixel = Geist_Pixel({ subsets: ["latin"], variable: "--font-pixel", weight: "400", adjustFontFallback: false, fallback: ["monospace"] });
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 const DESCRIPTION =
   "Paste a cURL command or OpenAPI spec and get an MCP tool your AI agent can call. Accord checks every call: role-based tool lists, loop breakers, approvals, caching, payload trimming and redaction. Free sandbox, no signup.";
@@ -76,11 +78,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           }}
         />
       </head>
-      <body className={`${sans.variable} ${mono.variable}`}>
+      <body className={`${sans.variable} ${mono.variable} ${pixel.variable}`}>
         <a className="skip" href="#main">
           Skip to content
         </a>
-        {children}
+        <SiteLoader />
+        <div className="site-frame">{children}</div>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgLd).replace(/</g, "\\u003c") }}

@@ -95,18 +95,18 @@ export default function Landing() {
           <div className="hero2-noise" aria-hidden="true" />
           <div className="shell">
             <div className="hero2-copy">
-              <p className="kicker">Your API. Your agent. Your rules.</p>
+              <p className="kicker">An API is what your app can do. MCP lets AI use it.</p>
               <h1 className="display">
-                Turn your API into
+                Give your AI
                 <br />
-                <span className="lilac">an MCP server.</span>
+                <span className="lilac">the right tools.</span>
               </h1>
               <p className="lede">
-                Import your API. Test its tools. Connect your agent.
-                Try the guardrails in a free sandbox, then deploy a server for your real API.
+                Turn an API into tools for Claude, Cursor, and other AI assistants.
+                Test what they can do, set the boundaries, and see every call.
               </p>
               <div className="hero2-actions">
-                <a href="#converter" className="btn btn-lg">Build your MCP server <ArrowRight size={18} /></a>
+                <a href="/app" className="btn btn-lg">Build your first server <ArrowRight size={18} /></a>
                 <a href="#live" className="btn btn-ghost btn-lg">
                   Try the live demo
                 </a>
@@ -120,7 +120,7 @@ export default function Landing() {
                 ))}
               </div>
             </div>
-            <div className="hero2-demo" id="converter">
+            <div className="hero2-demo" id="converter"><div className="demo-caption"><span>Try it here</span><span>Paste → Test → Connect</span></div>
               <Converter />
             </div>
             <div className="facts">

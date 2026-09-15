@@ -66,7 +66,7 @@ export default function DocsPage() {
             <h3>1. Get a sandbox URL</h3>
             <p>
               On the <Link href="/#live">homepage</Link> or in the <Link href="/app">converter</Link>, click Create my sandbox
-              URL or Get a live MCP URL. No account is needed. Sandbox calls return sample data.
+              URL or Create sandbox URL. No account is needed. Sandbox calls return sample data.
             </p>
             <h3>2. Connect your agent</h3>
             <pre className="code-line">{`# Claude Code

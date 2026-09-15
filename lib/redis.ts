@@ -2,8 +2,9 @@ import type { Store } from "./pipeline";
 
 // Upstash Redis over its REST API with plain fetch; no client library needed.
 // Vercel's Upstash integration sets KV_REST_*; a direct Upstash setup sets UPSTASH_*.
-const url = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
-const token = process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
+const dedicatedUrl = process.env.UPSTASH_REDIS_REST_URL;
+const url = dedicatedUrl || process.env.KV_REST_API_URL;
+const token = dedicatedUrl ? process.env.UPSTASH_REDIS_REST_TOKEN : process.env.KV_REST_API_TOKEN;
 export const redisConfigured = Boolean(url && token);
 const PREFIX = "accord:";
 

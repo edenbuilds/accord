@@ -1,6 +1,6 @@
 # Accord design direction
 
-Updated 15-09-2026. Paper (#f7f8f3) is the default across the site, converter and gateway dashboard. Green (#d8e9bd) anchors the live demo; dark green type and buttons provide contrast. Dither stays on margins and the hero uses the supplied Originkit ASCII wave. No startup loader. Geist headings, ordinary readable labels, monospace only for code. Existing vendor assets remain credited below.
+Updated 15-09-2026. Warm paper (#f8f6f0) is the default across the site and workspace. Forest (#285440), pale green (#cfdfbf), and apricot (#edd0ae) form the palette. Reference image 6 informs the inset frame and ruled/hatched gutters. The converter sits on a grainy green/apricot gradient. Manrope handles reading and UI; Geist Pixel handles the hero accent and selected display text. The supplied Hyperiux lines loader runs once per session with a short timeout and reduced-motion support. Originkit ASCII waves and footer Tetris remain, with real theSVG marks. Existing vendor assets remain credited below.
 
 Logo: the A-mark supplied on 14-09-2026, traced by hand as a single even-odd SVG path (components/ui.tsx `Mark`). The registered-mark symbol is not used.
 
@@ -20,3 +20,10 @@ Logo: the A-mark supplied on 14-09-2026, traced by hand as a single even-odd SVG
 - **References:** libraries.dev (agent-friendly structure) and transitions.dev (CSS micro-states).
 
 GSAP drives Hyperiux effects and the old reveal. No element is animated by two libraries. Originkit's `motion` reveal was removed.
+
+## Sources checked during the material redesign
+
+- User supplied six reference images; image 6 supplies the frame/gutter grammar.
+- Geist Pixel: https://vercel.com/font and https://github.com/vercel/geist-font. Loaded through Next font.
+- Transitions.dev: https://transitions.dev, restrained hover/press timings applied to controls.
+- BYQ: configured MCP endpoint discovered, but BYQ_SUPPLY_API_KEY is unavailable to this session; no BYQ component is claimed as imported.

@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import CenterLinesLoading from "./effects/lines-loader/CenterLinesLoading";
 
 // Hyperiux lines loader, once per browser session. The layout's inline script
@@ -12,6 +12,7 @@ export default function SiteLoader() {
     } catch {}
     setState("fade");
   }, []);
+  useEffect(() => { const timer = setTimeout(done, 2300); return () => clearTimeout(timer); }, [done]);
   if (state === "gone") return null;
   return (
     <div
@@ -21,10 +22,10 @@ export default function SiteLoader() {
     >
       <CenterLinesLoading
         title="Accord"
-        subtitle="Turn any API into a safe AI tool."
-        lineCount={29}
-        darkLineColor="#c9b8f2"
-        duration={0.85}
+        subtitle="Your tools. Connected."
+        lineCount={17}
+        darkLineColor="#648563"
+        duration={0.35}
         onComplete={done}
       />
     </div>

@@ -317,18 +317,18 @@ export default function CenterLinesLoading(
 
     let charIdx = 0;
     return (
-        <div ref={containerRef} className="fixed inset-0 h-dvh w-screen overflow-hidden bg-[#111a14]">
+        <div ref={containerRef} className="fixed inset-0 h-dvh w-screen overflow-hidden bg-[#f5f3ed]">
             <div
                 ref={blackPanelRef}
-                className="absolute inset-0 z-20 bg-[#111a14] will-change-transform"
+                className="absolute inset-0 z-20 bg-[#f5f3ed] will-change-transform"
             />
             <div
                 ref={revealPanelRef}
-                className="absolute inset-0 z-30 bg-[#1b2a20] scale-y-0 will-change-transform"
+                className="absolute inset-0 z-30 bg-[#e1ebd8] scale-y-0 will-change-transform"
             />
             <div className="absolute inset-0 z-50 flex items-center justify-center">
                 <div className="px-6 text-center">
-                    <p className="select-none text-[clamp(2.75rem,7vw,5.5rem)] font-semibold leading-[1.05] tracking-[-0.04em] text-white">
+                    <p className="select-none text-[clamp(2.75rem,7vw,5.5rem)] font-semibold leading-[1.05] tracking-[-0.04em] text-[#24392c]">
                         {words.map((word, wordIdx) => (
                             <span key={`${word}-${wordIdx}`}>
                                 <span className="inline-block whitespace-nowrap">
@@ -353,7 +353,7 @@ export default function CenterLinesLoading(
                     </p>
                     <p
                         ref={heroSubtitleRef}
-                        className="mt-4 select-none text-[16px] text-white/65 opacity-0"
+                        className="mt-4 select-none text-[16px] text-[#52624d] opacity-0"
                     >
                         {subtitle}
                     </p>

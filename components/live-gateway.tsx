@@ -98,14 +98,14 @@ export function rememberGateway(g: SavedGateway) {
     localStorage.setItem(SAVED, JSON.stringify([g, ...list.filter((x) => x.id !== g.id)].slice(0, 20)));
   } catch {}
 }
-export function MyGateways() {
+export function MyGateways({ showEmpty = false, onCreate }: { showEmpty?: boolean; onCreate?: () => void }) {
   const [list, setList] = useState<SavedGateway[]>([]);
   useEffect(() => {
     try {
       setList(JSON.parse(localStorage.getItem(SAVED) ?? "[]"));
     } catch {}
   }, []);
-  if (!list.length) return null;
+  if (!list.length) return showEmpty ? <div className="gw-panel"><h2>No sandboxes yet</h2><p>Create your first server in the builder. It will appear here so you can find it again.</p>{onCreate ? <button type="button" className="link" onClick={onCreate}>Build your first server</button> : <Link href="/app" className="link">Build your first server</Link>}</div> : null;
   return (
     <div className="gw-panel">
       <h2>Your gateways in this browser</h2>
@@ -216,7 +216,12 @@ export default function LiveGateway({
       const args = JSON.parse(argumentsText);
       if (!args || typeof args !== "object" || Array.isArray(args)) throw new Error("Arguments must be a JSON object.");
       const res = await client.callTool({ name: tool.name, arguments: args });
-      setResponseText(JSON.stringify(res, null, 2));
+      const content = Array.isArray(res.content) ? res.content : [];
+      const rendered = content.map(part => {
+        if (part.type !== "text") return part;
+        try { return JSON.parse(String(part.text)); } catch { return part.text; }
+      });
+      setResponseText(JSON.stringify(rendered.length === 1 ? rendered[0] : rendered, null, 2));
       setMessage(
         `Called ${tool.name} through the real MCP endpoint. ${res.isError ? "Accord stopped it. The feed shows why." : "Sample data came back."}`,
       );
@@ -224,7 +229,7 @@ export default function LiveGateway({
       reload();
     } catch (e) {
       setTesting("error");
-      setMessage(e instanceof Error ? e.message : "The test call failed.");
+      setMessage(e instanceof SyntaxError ? "These inputs are not valid JSON. Check the brackets and quotes, then try again." : e instanceof Error ? e.message : "The test call failed.");
     } finally {
       await client.close().catch(() => {});
     }
@@ -317,7 +322,7 @@ export default function LiveGateway({
       {receipts.some((r) => r.effect === "allow") && (
         <div className="lg-hook">
           <p>
-            <strong>It works.</strong> This sandbox stays live for 30 days or 1,000 calls. To connect your real API and
+            <strong>It works.</strong> This sandbox stays live for 30 days or 1,000 calls. To connect your real API,
             use the self-hosted template. Hosted accounts are planned.
           </p>
           <Link href="/docs#quickstart" className="btn">
